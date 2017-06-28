@@ -3,12 +3,10 @@ package com.minorius.watchertube;
 import android.os.Bundle;
 import android.widget.Toast;
 
-import com.google.android.youtube.player.YouTubeApiServiceUtil;
 import com.google.android.youtube.player.YouTubeBaseActivity;
 import com.google.android.youtube.player.YouTubeInitializationResult;
 import com.google.android.youtube.player.YouTubePlayer;
 import com.google.android.youtube.player.YouTubePlayerView;
-import com.google.android.youtube.player.YouTubeThumbnailLoader;
 import com.minorius.watchertube.db.RightDBHandler;
 import com.minorius.watchertube.db.RightDBUtils;
 
@@ -23,7 +21,6 @@ public class VideoActivity extends YouTubeBaseActivity {
     private YouTubePlayerView playerFrame;
     private YouTubePlayer.OnInitializedListener onInitializedListener;
 
-    YouTubeApiServiceUtil youTubeApiServiceUtil;
     @Override
     protected void onCreate(Bundle bundle) {
         super.onCreate(bundle);
@@ -46,7 +43,13 @@ public class VideoActivity extends YouTubeBaseActivity {
         };
         playerFrame.initialize(ContentActivity.KEY, onInitializedListener);
 
+        RightDBHandler rightDBHandler = new RightDBHandler(getApplicationContext(), "test", 1);
 
+        try {
+            rightDBHandler.createDataBase();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
 
     }
 }
