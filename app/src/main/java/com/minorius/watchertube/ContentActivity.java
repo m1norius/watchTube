@@ -17,6 +17,8 @@ import android.view.View;
 import android.widget.ImageView;
 import android.widget.Toast;
 
+import com.facebook.Profile;
+import com.facebook.ProfileTracker;
 import com.facebook.login.LoginManager;
 import com.google.gson.Gson;
 import com.google.gson.JsonObject;
@@ -50,7 +52,7 @@ public class ContentActivity extends AppCompatActivity implements NavigationView
     private ImageView imageView;
     private RecyclerView recyclerView;
     private NavigationView navigationView;
-
+    ProfileTracker profileTracker;
     private EndlessRecyclerViewScrollListener scrollListener;
 
     MyAdapter adapter;
@@ -59,6 +61,9 @@ public class ContentActivity extends AppCompatActivity implements NavigationView
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+
+        setCustomTitle();
+
         setContentView(R.layout.activity_content);
 
         recyclerView = (RecyclerView) findViewById(R.id.id_recycler_view);
@@ -104,7 +109,7 @@ public class ContentActivity extends AppCompatActivity implements NavigationView
             default:
                 Toast.makeText(getApplicationContext(), "Error", Toast.LENGTH_SHORT).show();
                 break;
-            }
+        }
         DrawerLayout drawerLayout = (DrawerLayout) findViewById(R.id.id_drawer_layout);
         drawerLayout.closeDrawer(GravityCompat.START);
         return true;
@@ -226,15 +231,35 @@ public class ContentActivity extends AppCompatActivity implements NavigationView
     public boolean onOptionsItemSelected(MenuItem item) {
         switch (item.getItemId()){
             case R.id.id_logout :
-                Intent intent = new Intent(getApplicationContext(), MainActivity.class);
-                intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
-                LoginManager.getInstance().logOut();
-                startActivity(intent);
+                logOut();
                 break;
             default:
                 Toast.makeText(getApplicationContext(), "Error_menu", Toast.LENGTH_SHORT).show();
         }
         return super.onOptionsItemSelected(item);
+    }
+
+    private void setCustomTitle() {
+
+        if (Profile.getCurrentProfile() != null){
+            setTitle(Profile.getCurrentProfile().getName());
+        }else {
+            profileTracker = new ProfileTracker() {
+                @Override
+                protected void onCurrentProfileChanged(Profile oldProfile, Profile currentProfile) {
+                    if (currentProfile != null) {
+                        setTitle(currentProfile.getName());
+                    }
+                }
+            };
+        }
+    }
+
+    private void logOut(){
+        Intent intent = new Intent(getApplicationContext(), MainActivity.class);
+        intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
+        LoginManager.getInstance().logOut();
+        startActivity(intent);
     }
 
     @Override
