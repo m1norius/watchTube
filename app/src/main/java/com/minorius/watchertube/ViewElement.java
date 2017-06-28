@@ -4,14 +4,14 @@ package com.minorius.watchertube;
  * Created by minorius on 22.06.2017.
  */
 
-public class ViewElements {
+public class ViewElement {
 
     private String title;
     private String description;
     private String videoUrl;
     private String imageUrl;
 
-    public ViewElements(String title, String description, String videoUrl, String imageUrl) {
+    public ViewElement(String title, String description, String videoUrl, String imageUrl) {
         this.title = title;
         this.description = description;
         this.videoUrl = videoUrl;
@@ -52,7 +52,7 @@ public class ViewElements {
 
     @Override
     public String toString() {
-        return "ViewElements{" +
+        return "ViewElement{" +
                 "title='" + title + '\'' +
                 ", description='" + description + '\'' +
                 ", videoUrl='" + videoUrl + '\'' +

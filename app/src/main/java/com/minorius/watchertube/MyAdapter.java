@@ -9,14 +9,13 @@ import android.view.ViewGroup;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.TextView;
-import android.widget.Toast;
 
 import com.squareup.picasso.Picasso;
 
 import java.util.ArrayList;
 
 public class MyAdapter extends RecyclerView.Adapter<MyAdapter.ViewHolder> {
-    private ArrayList<ViewElements> listForView;
+    private ArrayList<ViewElement> listForView;
     private Context context;
 
 
@@ -34,7 +33,7 @@ public class MyAdapter extends RecyclerView.Adapter<MyAdapter.ViewHolder> {
         }
     }
 
-    public MyAdapter(ArrayList<ViewElements> listForView, Context context) {
+    public MyAdapter(ArrayList<ViewElement> listForView, Context context) {
         this.listForView = listForView;
         this.context = context;
     }

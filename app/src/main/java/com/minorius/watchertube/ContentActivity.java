@@ -17,7 +17,6 @@ import android.view.View;
 import android.widget.ImageView;
 import android.widget.Toast;
 
-import com.facebook.AccessToken;
 import com.facebook.login.LoginManager;
 import com.google.gson.Gson;
 import com.google.gson.JsonObject;
@@ -47,7 +46,7 @@ public class ContentActivity extends AppCompatActivity implements NavigationView
     public  String PLAYLIST_2 = "https://www.googleapis.com/youtube/v3/playlistItems?part=snippet&playlistId="+LINK_2+"&key="+KEY+"&maxResults="+maxResult;
     public  String PLAYLIST_3 = "https://www.googleapis.com/youtube/v3/playlistItems?part=snippet&playlistId="+LINK_3+"&key="+KEY+"&maxResults="+maxResult;
 
-    private static ArrayList<ViewElements> listForView;
+    private static ArrayList<ViewElement> listForView;
     private ImageView imageView;
     private RecyclerView recyclerView;
     private NavigationView navigationView;
@@ -144,7 +143,7 @@ public class ContentActivity extends AppCompatActivity implements NavigationView
                             if (fromJson != null){
                                 for (Item pageInfo : fromJson.getItems()){
                                     Snippet snippet = pageInfo.getSnippet();
-                                    listForView.add(new ViewElements(
+                                    listForView.add(new ViewElement(
                                             snippet.getTitle(),
                                             snippet.getDescription(),
                                             snippet.getResourceId().getVideoId(),
@@ -170,7 +169,7 @@ public class ContentActivity extends AppCompatActivity implements NavigationView
         new Thread(runnable).start();
     }
 
-    public void startRecyclerView(final ArrayList<ViewElements> list){
+    public void startRecyclerView(final ArrayList<ViewElement> list){
         layoutManager = new LinearLayoutManager(getApplicationContext());
         recyclerView.setLayoutManager(layoutManager);
         adapter = new MyAdapter(list, getApplicationContext());
@@ -242,6 +241,7 @@ public class ContentActivity extends AppCompatActivity implements NavigationView
     public void onBackPressed() {
         Intent intent = new Intent(Intent.ACTION_MAIN);
         intent.addCategory(Intent.CATEGORY_HOME);
-        intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);startActivity(intent);
+        intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+        startActivity(intent);
     }
 }
