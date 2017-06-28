@@ -79,7 +79,6 @@ public class ContentActivity extends AppCompatActivity implements NavigationView
     public boolean onNavigationItemSelected(@NonNull MenuItem item) {
 
         imageView.setVisibility(View.GONE);
-
         switch (item.getItemId()){
             case R.id.first_id:
                 flag = 1;
