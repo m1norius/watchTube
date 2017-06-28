@@ -8,6 +8,7 @@ import android.support.annotation.Nullable;
 import android.support.design.widget.NavigationView;
 import android.support.v4.view.GravityCompat;
 import android.support.v4.widget.DrawerLayout;
+import android.support.v7.app.ActionBarDrawerToggle;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
@@ -52,8 +53,10 @@ public class ContentActivity extends AppCompatActivity implements NavigationView
     private ImageView imageView;
     private RecyclerView recyclerView;
     private NavigationView navigationView;
-    ProfileTracker profileTracker;
+    private ProfileTracker profileTracker;
     private EndlessRecyclerViewScrollListener scrollListener;
+    private ActionBarDrawerToggle actionBarDrawerToggle;
+    private DrawerLayout drawerLayout;
 
     MyAdapter adapter;
     LinearLayoutManager layoutManager;
@@ -68,8 +71,16 @@ public class ContentActivity extends AppCompatActivity implements NavigationView
 
         recyclerView = (RecyclerView) findViewById(R.id.id_recycler_view);
         navigationView = (NavigationView) findViewById(R.id.id_nav_view);
-        navigationView.setNavigationItemSelectedListener(this);
+        drawerLayout = (DrawerLayout) findViewById(R.id.id_drawer_layout);
         imageView = (ImageView) findViewById(R.id.id_logo);
+
+        navigationView.setNavigationItemSelectedListener(this);
+        actionBarDrawerToggle = new ActionBarDrawerToggle(this, drawerLayout, R.string.open, R.string.close);
+        drawerLayout.addDrawerListener(actionBarDrawerToggle);
+        actionBarDrawerToggle.syncState();
+        getSupportActionBar().setDisplayHomeAsUpEnabled(true);
+
+
 
         listForView = new ArrayList<>();
 
@@ -227,6 +238,11 @@ public class ContentActivity extends AppCompatActivity implements NavigationView
 
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
+
+        if (actionBarDrawerToggle.onOptionsItemSelected(item)){
+            return true;
+        }
+
         switch (item.getItemId()){
             case R.id.id_logout :
                 logOut();

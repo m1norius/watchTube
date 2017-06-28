@@ -7,4 +7,7 @@
     <string name="second">Достижения</string>
     <string name="third">МКС</string>
     <string name="action_settings">Logout</string>
+
+    <string name="open">Open</string>
+    <string name="close">Close</string>
 </resources>
