@@ -188,7 +188,6 @@ public class ContentActivity extends AppCompatActivity implements NavigationView
                 loadMore(view);
             }
         };
-
         recyclerView.addOnScrollListener(scrollListener);
     }
 

@@ -42,14 +42,5 @@ public class VideoActivity extends YouTubeBaseActivity {
             }
         };
         playerFrame.initialize(ContentActivity.KEY, onInitializedListener);
-
-        RightDBHandler rightDBHandler = new RightDBHandler(getApplicationContext(), "test", 1);
-
-        try {
-            rightDBHandler.createDataBase();
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-
     }
 }
