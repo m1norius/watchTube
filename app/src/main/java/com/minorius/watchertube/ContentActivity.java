@@ -37,7 +37,7 @@ public class ContentActivity extends AppCompatActivity implements NavigationView
 
     private int flag;
 
-    private static final String KEY = "AIzaSyAFUj0tBwzsexsjV81qjF9f1pCGtmDemDE";
+    public static final String KEY = "AIzaSyAFUj0tBwzsexsjV81qjF9f1pCGtmDemDE";
 
     private static final String LINK_1 = "PLte2HHUYysP9gUZycxG1gq2Z5IoIcHVwe";
     private static final String LINK_2 = "PLuztlLiWulOvqN3m2-msBXMHGI0To-bPm";
