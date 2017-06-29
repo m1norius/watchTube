@@ -35,20 +35,20 @@ import java.util.ArrayList;
 
 public class ContentActivity extends AppCompatActivity implements NavigationView.OnNavigationItemSelectedListener{
 
-    public int flag;
+    private int flag;
 
-    public static final String KEY = "AIzaSyAFUj0tBwzsexsjV81qjF9f1pCGtmDemDE";
+    private static final String KEY = "AIzaSyAFUj0tBwzsexsjV81qjF9f1pCGtmDemDE";
 
-    public static final String LINK_1 = "PLte2HHUYysP9gUZycxG1gq2Z5IoIcHVwe";
-    public static final String LINK_2 = "PLuztlLiWulOvqN3m2-msBXMHGI0To-bPm";
-    public static final String LINK_3 = "PLuztlLiWulOtaFNzX3jGYVyn102XQuBe4";
+    private static final String LINK_1 = "PLte2HHUYysP9gUZycxG1gq2Z5IoIcHVwe";
+    private static final String LINK_2 = "PLuztlLiWulOvqN3m2-msBXMHGI0To-bPm";
+    private static final String LINK_3 = "PLuztlLiWulOtaFNzX3jGYVyn102XQuBe4";
 
-    public String nextPageToken = "";
-    public static int maxResult = 10;
+    private String nextPageToken = "";
+    private static int maxResult = 10;
 
-    public  String PLAYLIST_1 = "https://www.googleapis.com/youtube/v3/playlistItems?part=snippet&playlistId="+LINK_1+"&key="+KEY+"&maxResults="+maxResult+"&pageToken="+nextPageToken;
-    public  String PLAYLIST_2 = "https://www.googleapis.com/youtube/v3/playlistItems?part=snippet&playlistId="+LINK_2+"&key="+KEY+"&maxResults="+maxResult+"&pageToken="+nextPageToken;
-    public  String PLAYLIST_3 = "https://www.googleapis.com/youtube/v3/playlistItems?part=snippet&playlistId="+LINK_3+"&key="+KEY+"&maxResults="+maxResult+"&pageToken="+nextPageToken;
+    private  String PLAYLIST_1 = "https://www.googleapis.com/youtube/v3/playlistItems?part=snippet&playlistId="+LINK_1+"&key="+KEY+"&maxResults="+maxResult+"&pageToken="+nextPageToken;
+    private  String PLAYLIST_2 = "https://www.googleapis.com/youtube/v3/playlistItems?part=snippet&playlistId="+LINK_2+"&key="+KEY+"&maxResults="+maxResult+"&pageToken="+nextPageToken;
+    private  String PLAYLIST_3 = "https://www.googleapis.com/youtube/v3/playlistItems?part=snippet&playlistId="+LINK_3+"&key="+KEY+"&maxResults="+maxResult+"&pageToken="+nextPageToken;
 
     private static ArrayList<ViewElement> listForView;
     private ImageView imageView;
@@ -81,45 +81,24 @@ public class ContentActivity extends AppCompatActivity implements NavigationView
         actionBarDrawerToggle.syncState();
         getSupportActionBar().setDisplayHomeAsUpEnabled(true);
 
-
-
         listForView = new ArrayList<>();
 
     }
 
     @Override
     public boolean onNavigationItemSelected(@NonNull MenuItem item) {
-
         imageView.setVisibility(View.GONE);
         switch (item.getItemId()){
             case R.id.first_id:
-                listForView.clear();
-                flag = 1;
-                maxResult = 10;
-                nextPageToken = "";
-                if (scrollListener != null){
-                    scrollListener.resetState();
-                }
+                setDefaultPropertiesForRecyclerViewByFlag(1);
                 loadJSON(PLAYLIST_1);
                 break;
             case R.id.second_id:
-                listForView.clear();
-                flag = 2;
-                maxResult = 10;
-                nextPageToken = "";
-                if (scrollListener!=null){
-                    scrollListener.resetState();
-                }
+                setDefaultPropertiesForRecyclerViewByFlag(2);
                 loadJSON(PLAYLIST_2);
                 break;
             case R.id.third_id:
-                listForView.clear();
-                flag = 3;
-                maxResult = 10;
-                nextPageToken = "";
-                if (scrollListener!=null){
-                    scrollListener.resetState();
-                }
+                setDefaultPropertiesForRecyclerViewByFlag(3);
                 loadJSON(PLAYLIST_3);
 
                 break;
@@ -132,9 +111,17 @@ public class ContentActivity extends AppCompatActivity implements NavigationView
         return true;
     }
 
+    private void setDefaultPropertiesForRecyclerViewByFlag(int flag){
+        this.flag = flag;
+        listForView.clear();
+        nextPageToken = "";
+        if (scrollListener != null){
+            scrollListener.resetState();
+        }
+    }
+
     public void loadJSON(final String link){
         final Handler handler = new Handler();
-
         Runnable runnable = new Runnable() {
             @Override
             public void run() {
@@ -214,11 +201,9 @@ public class ContentActivity extends AppCompatActivity implements NavigationView
     }
 
     public void loadMore(View view){
-
         view.post(new Runnable() {
             @Override
             public void run() {
-                //maxResult+=10;
 
                 switch (flag){
                     case 1:
@@ -249,7 +234,6 @@ public class ContentActivity extends AppCompatActivity implements NavigationView
 
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
-
         if (actionBarDrawerToggle.onOptionsItemSelected(item)){
             return true;
         }
@@ -265,7 +249,6 @@ public class ContentActivity extends AppCompatActivity implements NavigationView
     }
 
     private void setCustomTitle() {
-
         if (Profile.getCurrentProfile() != null){
             setTitle(Profile.getCurrentProfile().getName());
         }else {
