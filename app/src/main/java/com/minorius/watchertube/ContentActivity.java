@@ -39,15 +39,16 @@ public class ContentActivity extends AppCompatActivity implements NavigationView
 
     public static final String KEY = "AIzaSyAFUj0tBwzsexsjV81qjF9f1pCGtmDemDE";
 
-    public static final String LINK_1 = "PLuztlLiWulOskrqywdF27W-L1_K8qExRQ";
+    public static final String LINK_1 = "PLte2HHUYysP9gUZycxG1gq2Z5IoIcHVwe";
     public static final String LINK_2 = "PLuztlLiWulOvqN3m2-msBXMHGI0To-bPm";
     public static final String LINK_3 = "PLuztlLiWulOtaFNzX3jGYVyn102XQuBe4";
 
+    public String nextPageToken = "";
     public static int maxResult = 10;
 
-    public  String PLAYLIST_1 = "https://www.googleapis.com/youtube/v3/playlistItems?part=snippet&playlistId="+LINK_1+"&key="+KEY+"&maxResults="+maxResult;
-    public  String PLAYLIST_2 = "https://www.googleapis.com/youtube/v3/playlistItems?part=snippet&playlistId="+LINK_2+"&key="+KEY+"&maxResults="+maxResult;
-    public  String PLAYLIST_3 = "https://www.googleapis.com/youtube/v3/playlistItems?part=snippet&playlistId="+LINK_3+"&key="+KEY+"&maxResults="+maxResult;
+    public  String PLAYLIST_1 = "https://www.googleapis.com/youtube/v3/playlistItems?part=snippet&playlistId="+LINK_1+"&key="+KEY+"&maxResults="+maxResult+"&pageToken="+nextPageToken;
+    public  String PLAYLIST_2 = "https://www.googleapis.com/youtube/v3/playlistItems?part=snippet&playlistId="+LINK_2+"&key="+KEY+"&maxResults="+maxResult+"&pageToken="+nextPageToken;
+    public  String PLAYLIST_3 = "https://www.googleapis.com/youtube/v3/playlistItems?part=snippet&playlistId="+LINK_3+"&key="+KEY+"&maxResults="+maxResult+"&pageToken="+nextPageToken;
 
     private static ArrayList<ViewElement> listForView;
     private ImageView imageView;
@@ -58,8 +59,8 @@ public class ContentActivity extends AppCompatActivity implements NavigationView
     private ActionBarDrawerToggle actionBarDrawerToggle;
     private DrawerLayout drawerLayout;
 
-    MyAdapter adapter;
-    LinearLayoutManager layoutManager;
+    private MyAdapter adapter;
+    private LinearLayoutManager layoutManager;
 
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
@@ -92,24 +93,30 @@ public class ContentActivity extends AppCompatActivity implements NavigationView
         imageView.setVisibility(View.GONE);
         switch (item.getItemId()){
             case R.id.first_id:
+                listForView.clear();
                 flag = 1;
                 maxResult = 10;
+                nextPageToken = "";
                 if (scrollListener != null){
                     scrollListener.resetState();
                 }
                 loadJSON(PLAYLIST_1);
                 break;
             case R.id.second_id:
+                listForView.clear();
                 flag = 2;
                 maxResult = 10;
+                nextPageToken = "";
                 if (scrollListener!=null){
                     scrollListener.resetState();
                 }
                 loadJSON(PLAYLIST_2);
                 break;
             case R.id.third_id:
+                listForView.clear();
                 flag = 3;
                 maxResult = 10;
+                nextPageToken = "";
                 if (scrollListener!=null){
                     scrollListener.resetState();
                 }
@@ -154,24 +161,28 @@ public class ContentActivity extends AppCompatActivity implements NavigationView
                             Gson gson = new Gson();
 
                             com.minorius.watchertube.gson.Gson fromJson = gson.fromJson(jsonObject, com.minorius.watchertube.gson.Gson.class);
-                            listForView.clear();
+
                             if (fromJson != null){
                                 for (Item pageInfo : fromJson.getItems()){
-                                    Snippet snippet = pageInfo.getSnippet();
-                                    listForView.add(new ViewElement(
-                                            snippet.getTitle(),
-                                            snippet.getDescription(),
-                                            snippet.getResourceId().getVideoId(),
-                                            snippet.getThumbnails().getMedium().getUrl()));
+                                    try {
+                                        Snippet snippet = pageInfo.getSnippet();
+                                        listForView.add(new ViewElement(
+                                                snippet.getTitle(),
+                                                snippet.getDescription(),
+                                                snippet.getResourceId().getVideoId(),
+                                                snippet.getThumbnails().getMedium().getUrl()));
+                                    }catch (Exception e){
+                                        Toast.makeText(getApplicationContext(), "!", Toast.LENGTH_SHORT).show();
+                                    }
                                 }
+                                if (fromJson.getPrevPageToken() == null){
+                                    startRecyclerView(listForView);
+                                }
+
+                                nextPageToken = fromJson.getNextPageToken();
+
+                                adapter.notifyItemRangeInserted(listForView.size(), listForView.size()-1);
                             }
-
-
-                            if (maxResult == 10){
-                                startRecyclerView(listForView);
-                            }
-                            adapter.notifyItemRangeInserted(listForView.size(), listForView.size()-1);
-
                         }
                     });
 
@@ -207,19 +218,19 @@ public class ContentActivity extends AppCompatActivity implements NavigationView
         view.post(new Runnable() {
             @Override
             public void run() {
-                maxResult+=10;
+                //maxResult+=10;
 
                 switch (flag){
                     case 1:
-                        String NEXT_LIST_1 = "https://www.googleapis.com/youtube/v3/playlistItems?part=snippet&playlistId="+LINK_1+"&key="+KEY+"&maxResults="+maxResult;
+                        String NEXT_LIST_1 = "https://www.googleapis.com/youtube/v3/playlistItems?part=snippet&playlistId="+LINK_1+"&key="+KEY+"&maxResults="+maxResult+"&pageToken="+nextPageToken;
                         loadJSON(NEXT_LIST_1);
                         break;
                     case 2:
-                        String NEXT_LIST_2 = "https://www.googleapis.com/youtube/v3/playlistItems?part=snippet&playlistId="+LINK_2+"&key="+KEY+"&maxResults="+maxResult;
+                        String NEXT_LIST_2 = "https://www.googleapis.com/youtube/v3/playlistItems?part=snippet&playlistId="+LINK_2+"&key="+KEY+"&maxResults="+maxResult+"&pageToken="+nextPageToken;
                         loadJSON(NEXT_LIST_2);
                         break;
                     case 3:
-                        String NEXT_LIST_3 = "https://www.googleapis.com/youtube/v3/playlistItems?part=snippet&playlistId="+LINK_3+"&key="+KEY+"&maxResults="+maxResult;
+                        String NEXT_LIST_3 = "https://www.googleapis.com/youtube/v3/playlistItems?part=snippet&playlistId="+LINK_3+"&key="+KEY+"&maxResults="+maxResult+"&pageToken="+nextPageToken;
                         loadJSON(NEXT_LIST_3);
                         break;
                     default:
