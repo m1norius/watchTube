@@ -33,6 +33,7 @@ public class VideoActivity extends YouTubeBaseActivity {
             public void onInitializationSuccess(YouTubePlayer.Provider provider, YouTubePlayer youTubePlayer, boolean b) {
                 if(videoUrl != null){
                     youTubePlayer.loadVideo(videoUrl.toString());
+                    youTubePlayer.setFullscreen(true);
                 }
             }
 
