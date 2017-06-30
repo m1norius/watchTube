@@ -10,12 +10,22 @@ public class ViewElement {
     private String description;
     private String videoUrl;
     private String imageUrl;
+    private String duration;
 
-    public ViewElement(String title, String description, String videoUrl, String imageUrl) {
+    public ViewElement(String title, String description, String videoUrl, String imageUrl, String duration) {
         this.title = title;
         this.description = description;
         this.videoUrl = videoUrl;
         this.imageUrl = imageUrl;
+        this.duration = duration;
+    }
+
+    public String getDuration() {
+        return duration;
+    }
+
+    public void setDuration(String duration) {
+        this.duration = duration;
     }
 
     public String getTitle() {

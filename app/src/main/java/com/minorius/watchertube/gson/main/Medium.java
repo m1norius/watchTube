@@ -1,10 +1,10 @@
 
-package com.minorius.watchertube.gson;
+package com.minorius.watchertube.gson.main;
 
 import com.google.gson.annotations.Expose;
 import com.google.gson.annotations.SerializedName;
 
-public class Standard {
+public class Medium {
 
     @SerializedName("url")
     @Expose

@@ -1,5 +1,5 @@
 
-package com.minorius.watchertube.gson;
+package com.minorius.watchertube.gson.duration;
 
 import com.google.gson.annotations.Expose;
 import com.google.gson.annotations.SerializedName;

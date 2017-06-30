@@ -1,11 +1,11 @@
 
-package com.minorius.watchertube.gson;
+package com.minorius.watchertube.gson.duration;
 
 import java.util.List;
 import com.google.gson.annotations.Expose;
 import com.google.gson.annotations.SerializedName;
 
-public class Gson {
+public class Example {
 
     @SerializedName("kind")
     @Expose
@@ -13,12 +13,6 @@ public class Gson {
     @SerializedName("etag")
     @Expose
     private String etag;
-    @SerializedName("nextPageToken")
-    @Expose
-    private String nextPageToken;
-    @SerializedName("prevPageToken")
-    @Expose
-    private String prevPageToken;
     @SerializedName("pageInfo")
     @Expose
     private PageInfo pageInfo;
@@ -42,22 +36,6 @@ public class Gson {
         this.etag = etag;
     }
 
-    public String getNextPageToken() {
-        return nextPageToken;
-    }
-
-    public void setNextPageToken(String nextPageToken) {
-        this.nextPageToken = nextPageToken;
-    }
-
-    public String getPrevPageToken() {
-        return prevPageToken;
-    }
-
-    public void setPrevPageToken(String prevPageToken) {
-        this.prevPageToken = prevPageToken;
-    }
-
     public PageInfo getPageInfo() {
         return pageInfo;
     }
@@ -75,5 +53,3 @@ public class Gson {
     }
 
 }
-
-

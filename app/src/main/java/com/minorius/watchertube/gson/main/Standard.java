@@ -1,10 +1,10 @@
 
-package com.minorius.watchertube.gson;
+package com.minorius.watchertube.gson.main;
 
 import com.google.gson.annotations.Expose;
 import com.google.gson.annotations.SerializedName;
 
-public class Maxres {
+public class Standard {
 
     @SerializedName("url")
     @Expose

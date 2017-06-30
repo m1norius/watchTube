@@ -23,13 +23,16 @@ public class MyAdapter extends RecyclerView.Adapter<MyAdapter.ViewHolder> {
 
         private TextView titleTextView;
         private TextView descriptionTextView;
+        private TextView duration;
         private ImageView imageView;
 
         public ViewHolder(LinearLayout v) {
             super(v);
             titleTextView = (TextView) v.findViewById(R.id.id_text_title);
             descriptionTextView = (TextView) v.findViewById(R.id.id_text_description);
+            duration = (TextView) v.findViewById(R.id.id_text_duration);
             imageView = (ImageView) v.findViewById(R.id.id_image_view);
+
         }
     }
 
@@ -49,6 +52,7 @@ public class MyAdapter extends RecyclerView.Adapter<MyAdapter.ViewHolder> {
 
         holder.titleTextView.setText(listForView.get(position).getTitle());
         holder.descriptionTextView.setText(listForView.get(position).getDescription());
+        holder.duration.setText(listForView.get(position).getDuration());
         Picasso.with(context)
                 .load(listForView.get(position).getImageUrl())
                 .placeholder(R.drawable.com_facebook_button_icon)

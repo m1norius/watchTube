@@ -24,14 +24,20 @@ import com.facebook.login.LoginManager;
 import com.google.gson.Gson;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
-import com.minorius.watchertube.gson.Item;
-import com.minorius.watchertube.gson.Snippet;
+import com.minorius.watchertube.gson.duration.Example;
+import com.minorius.watchertube.gson.main.Item;
+import com.minorius.watchertube.gson.main.Main;
+import com.minorius.watchertube.gson.main.Snippet;
 
 import java.io.BufferedReader;
 import java.io.InputStreamReader;
 import java.net.HttpURLConnection;
 import java.net.URL;
 import java.util.ArrayList;
+import java.util.concurrent.Callable;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
 
 public class ContentActivity extends AppCompatActivity implements NavigationView.OnNavigationItemSelectedListener{
 
@@ -122,12 +128,85 @@ public class ContentActivity extends AppCompatActivity implements NavigationView
 
     public void loadJSON(final String link){
         final Handler handler = new Handler();
+
         Runnable runnable = new Runnable() {
             @Override
             public void run() {
 
-                try {
-                    URL url = new URL(link);
+                final JsonObject jsonObject = getJSONFromLink(link);
+                Gson gson = new Gson();
+                final Main fromJson = gson.fromJson(jsonObject, Main.class);
+
+                handler.post(new Runnable() {
+
+                    JsonObject jsonObjectForDuration;
+
+                    @Override
+                    public void run() {
+
+                        if (fromJson != null) {
+                            for (Item pageInfo : fromJson.getItems()) {
+                                try {
+                                    Snippet snippet = pageInfo.getSnippet();
+
+                                    String videoID = snippet.getResourceId().getVideoId();
+                                    final String linkForDuration = "https://www.googleapis.com/youtube/v3/videos?id="+videoID+"&key="+KEY+"&part=contentDetails";
+
+                                    ExecutorService executorService = Executors.newCachedThreadPool();
+
+                                    Future<String> future = executorService.submit(new Callable<String>() {
+                                        @Override
+                                        public String call() throws Exception {
+                                            jsonObjectForDuration = getJSONFromLink(linkForDuration);
+                                            return parseJSONForDuration(jsonObjectForDuration);
+                                        }
+                                    });
+
+                                    executorService.shutdown();
+
+                                    String duration = getDuration(future.get());
+
+                                    listForView.add(new ViewElement(
+                                            snippet.getTitle(),
+                                            snippet.getDescription(),
+                                            snippet.getResourceId().getVideoId(),
+                                            snippet.getThumbnails().getMedium().getUrl(),
+                                            duration));
+
+                                } catch (Exception e) {
+                                    System.out.println(e);
+                                }
+                            }
+                            if (fromJson.getPrevPageToken() == null) {
+                                startRecyclerView(listForView);
+                            }
+
+                            nextPageToken = fromJson.getNextPageToken();
+
+                            adapter.notifyItemRangeInserted(listForView.size(), listForView.size() - 1);
+                        }
+                    }
+
+                    private String parseJSONForDuration(JsonObject jsonObject){
+                        Gson gson = new Gson();
+                        Example fromJson = gson.fromJson(jsonObject, Example.class);
+                        String duration = null;
+                        if (fromJson != null){
+                            for (com.minorius.watchertube.gson.duration.Item example : fromJson.getItems()){
+                                duration = example.getContentDetails().getDuration();
+                            }
+                        }
+                        return duration;
+                    }
+                });
+            }
+
+            private JsonObject getJSONFromLink(String uri){
+
+                JsonObject returnedJSONObject = null;
+
+                try{
+                    URL url = new URL(uri);
                     HttpURLConnection con = (HttpURLConnection) url.openConnection();
                     con.connect();
                     BufferedReader br = new BufferedReader(new InputStreamReader(con.getInputStream()));
@@ -138,45 +217,15 @@ public class ContentActivity extends AppCompatActivity implements NavigationView
                         sb.append(line);
                     }
 
-                    final String loadedDataFromLink = sb.toString();
-
-                    handler.post(new Runnable() {
-
-                        @Override
-                        public void run() {
-                            JsonObject jsonObject = (new JsonParser()).parse(loadedDataFromLink).getAsJsonObject();
-                            Gson gson = new Gson();
-
-                            com.minorius.watchertube.gson.Gson fromJson = gson.fromJson(jsonObject, com.minorius.watchertube.gson.Gson.class);
-
-                            if (fromJson != null){
-                                for (Item pageInfo : fromJson.getItems()){
-                                    try {
-                                        Snippet snippet = pageInfo.getSnippet();
-                                        listForView.add(new ViewElement(
-                                                snippet.getTitle(),
-                                                snippet.getDescription(),
-                                                snippet.getResourceId().getVideoId(),
-                                                snippet.getThumbnails().getMedium().getUrl()));
-                                    }catch (Exception e){
-                                        Toast.makeText(getApplicationContext(), "!", Toast.LENGTH_SHORT).show();
-                                    }
-                                }
-                                if (fromJson.getPrevPageToken() == null){
-                                    startRecyclerView(listForView);
-                                }
-
-                                nextPageToken = fromJson.getNextPageToken();
-
-                                adapter.notifyItemRangeInserted(listForView.size(), listForView.size()-1);
-                            }
-                        }
-                    });
+                    String loadedDataFromLink = sb.toString();
+                    returnedJSONObject = (new JsonParser()).parse(loadedDataFromLink).getAsJsonObject();
 
                     br.close();
                 }catch (Exception e){
                     System.out.println(e);
                 }
+
+                return returnedJSONObject;
             }
         };
         new Thread(runnable).start();
@@ -198,6 +247,22 @@ public class ContentActivity extends AppCompatActivity implements NavigationView
             }
         };
         recyclerView.addOnScrollListener(scrollListener);
+    }
+
+    private String getDuration(String ISOString){
+
+        String timeString;
+
+        if (ISOString.contains("H")){
+            ISOString = ISOString.replace("PT","").replace("H",":").replace("M",":").replace("S","");
+            String arr[]=ISOString.split(":");
+            timeString = String.format("%d:%02d:%02d", Integer.parseInt(arr[0]), Integer.parseInt(arr[1]), Integer.parseInt(arr[2]));
+        }else {
+            ISOString = ISOString.replace("PT","").replace("M",":").replace("S","");
+            String arr[]=ISOString.split(":");
+            timeString = String.format("%02d:%02d", Integer.parseInt(arr[0]), Integer.parseInt(arr[1]));
+        }
+        return timeString;
     }
 
     public void loadMore(View view){

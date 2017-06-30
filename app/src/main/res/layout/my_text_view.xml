@@ -2,26 +2,34 @@
 <LinearLayout
     xmlns:android="http://schemas.android.com/apk/res/android"
     android:orientation="horizontal"
-    android:paddingLeft="8dp"
-    android:paddingRight="8dp"
-    android:paddingBottom="8dp"
+    android:layout_marginLeft="4dp"
     android:layout_height="150dp"
     android:layout_width="match_parent">
 
     <LinearLayout
+        android:orientation="vertical"
         android:layout_weight="3"
         android:layout_width="match_parent"
         android:layout_height="match_parent">
 
         <ImageView
+            android:layout_weight="1"
             android:id="@+id/id_image_view"
             android:layout_width="match_parent"
             android:layout_height="match_parent" />
 
+        <TextView
+            android:gravity="end"
+            android:textSize="12sp"
+            android:layout_weight="3"
+            android:id="@+id/id_text_duration"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"/>
+
     </LinearLayout>
 
     <LinearLayout
-        android:layout_margin="8dp"
+        android:layout_margin="4dp"
         android:layout_weight="2"
         android:orientation="vertical"
         android:layout_width="match_parent"
@@ -41,6 +49,8 @@
             android:id="@+id/id_text_description"
             android:layout_width="match_parent"
             android:layout_height="match_parent"/>
+
+
     </LinearLayout>
 
 </LinearLayout>
