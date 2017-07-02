@@ -4,7 +4,7 @@ package com.minorius.watchertube.gson.duration;
 import com.google.gson.annotations.Expose;
 import com.google.gson.annotations.SerializedName;
 
-public class ItemDuration {
+public class Item {
 
     @SerializedName("kind")
     @Expose
@@ -51,4 +51,13 @@ public class ItemDuration {
         this.contentDetails = contentDetails;
     }
 
+    @Override
+    public String toString() {
+        return "Item{" +
+                "kind='" + kind + '\'' +
+                ", etag='" + etag + '\'' +
+                ", id='" + id + '\'' +
+                ", contentDetails=" + contentDetails +
+                '}';
+    }
 }

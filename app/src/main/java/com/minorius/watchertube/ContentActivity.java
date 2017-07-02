@@ -29,15 +29,25 @@ import com.minorius.watchertube.gson.main.Item;
 import com.minorius.watchertube.gson.main.Main;
 import com.minorius.watchertube.gson.main.Snippet;
 
+import org.codehaus.jackson.map.util.ISO8601DateFormat;
+
 import java.io.BufferedReader;
 import java.io.InputStreamReader;
 import java.net.HttpURLConnection;
 import java.net.URL;
+import java.text.DateFormat;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Calendar;
+import java.util.Date;
 import java.util.concurrent.Callable;
+import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 public class ContentActivity extends AppCompatActivity implements NavigationView.OnNavigationItemSelectedListener{
 
@@ -46,7 +56,7 @@ public class ContentActivity extends AppCompatActivity implements NavigationView
     public static final String KEY = "AIzaSyAFUj0tBwzsexsjV81qjF9f1pCGtmDemDE";
 
     private static final String LINK_1 = "PLte2HHUYysP9gUZycxG1gq2Z5IoIcHVwe";
-    private static final String LINK_2 = "PLuztlLiWulOvqN3m2-msBXMHGI0To-bPm";
+    private static final String LINK_2 = "PLte2HHUYysP8XdLtZAFgXnw2itjEOmgJm";
     private static final String LINK_3 = "PLuztlLiWulOtaFNzX3jGYVyn102XQuBe4";
 
     private String nextPageToken = "";
@@ -56,7 +66,7 @@ public class ContentActivity extends AppCompatActivity implements NavigationView
     private  String PLAYLIST_2 = "https://www.googleapis.com/youtube/v3/playlistItems?part=snippet&playlistId="+LINK_2+"&key="+KEY+"&maxResults="+maxResult+"&pageToken="+nextPageToken;
     private  String PLAYLIST_3 = "https://www.googleapis.com/youtube/v3/playlistItems?part=snippet&playlistId="+LINK_3+"&key="+KEY+"&maxResults="+maxResult+"&pageToken="+nextPageToken;
 
-    private static ArrayList<ViewElement> listForView;
+    private ArrayList<ViewElement> listForView;
     private ImageView imageView;
     private RecyclerView recyclerView;
     private NavigationView navigationView;
@@ -91,6 +101,8 @@ public class ContentActivity extends AppCompatActivity implements NavigationView
 
     }
 
+
+
     @Override
     public boolean onNavigationItemSelected(@NonNull MenuItem item) {
         imageView.setVisibility(View.GONE);
@@ -122,6 +134,7 @@ public class ContentActivity extends AppCompatActivity implements NavigationView
         listForView.clear();
         nextPageToken = "";
         if (scrollListener != null){
+            System.out.println("Reset state");
             scrollListener.resetState();
         }
     }
@@ -147,32 +160,51 @@ public class ContentActivity extends AppCompatActivity implements NavigationView
                         if (fromJson != null) {
                             for (Item pageInfo : fromJson.getItems()) {
                                 try {
-                                    Snippet snippet = pageInfo.getSnippet();
+                                    final Snippet snippet = pageInfo.getSnippet();
 
                                     String videoID = snippet.getResourceId().getVideoId();
                                     final String linkForDuration = "https://www.googleapis.com/youtube/v3/videos?id="+videoID+"&key="+KEY+"&part=contentDetails";
 
-                                    ExecutorService executorService = Executors.newCachedThreadPool();
+                                    Thread t = new Thread(new Runnable() {
 
-                                    Future<String> future = executorService.submit(new Callable<String>() {
+                                        Handler h2 = new Handler();
                                         @Override
-                                        public String call() throws Exception {
+                                        public void run() {
+                                            final String duration;
+                                            //System.out.println(linkForDuration);
+                                            //+
                                             jsonObjectForDuration = getJSONFromLink(linkForDuration);
-                                            return parseJSONForDuration(jsonObjectForDuration);
+                                            //+
+                                            String ISODuration = parseJSONForDuration(jsonObjectForDuration);
+
+                                            duration = getDuration(ISODuration);
+
+                                            h2.post(new Runnable() {
+                                                @Override
+                                                public void run() {
+
+                                                    try {
+                                                        ViewElement viewElement = new ViewElement( snippet.getTitle(),
+                                                                snippet.getDescription(),
+                                                                snippet.getResourceId().getVideoId(),
+                                                                snippet.getThumbnails().getMedium().getUrl(),
+                                                                duration);
+
+                                                        if (!listForView.contains(viewElement)){
+                                                            listForView.add(viewElement);
+                                                            adapter.notifyDataSetChanged();
+                                                        }
+
+
+                                                    }catch (Exception e){
+                                                        System.out.println(e);
+                                                    }
+
+                                                }
+                                            });
                                         }
                                     });
-
-                                    executorService.shutdown();
-
-                                    String duration = getDuration(future.get());
-
-                                    listForView.add(new ViewElement(
-                                            snippet.getTitle(),
-                                            snippet.getDescription(),
-                                            snippet.getResourceId().getVideoId(),
-                                            snippet.getThumbnails().getMedium().getUrl(),
-                                            duration));
-
+                                    t.start();
                                 } catch (Exception e) {
                                     System.out.println(e);
                                 }
@@ -180,23 +212,23 @@ public class ContentActivity extends AppCompatActivity implements NavigationView
                             if (fromJson.getPrevPageToken() == null) {
                                 startRecyclerView(listForView);
                             }
-
                             nextPageToken = fromJson.getNextPageToken();
-
-                            adapter.notifyItemRangeInserted(listForView.size(), listForView.size() - 1);
                         }
                     }
 
                     private String parseJSONForDuration(JsonObject jsonObject){
+
                         Gson gson = new Gson();
                         Example fromJson = gson.fromJson(jsonObject, Example.class);
-                        String duration = null;
-                        if (fromJson != null){
-                            for (com.minorius.watchertube.gson.duration.Item example : fromJson.getItems()){
-                                duration = example.getContentDetails().getDuration();
-                            }
+
+                        for (com.minorius.watchertube.gson.duration.Item example : fromJson.getItems()) {
+                            //System.out.println(example);
+                            String duration = example.getContentDetails().getDuration();
+                            return duration;
                         }
-                        return duration;
+
+                        System.out.println("parseJSONForDuration error");
+                        return "-";
                     }
                 });
             }
@@ -217,21 +249,19 @@ public class ContentActivity extends AppCompatActivity implements NavigationView
                         sb.append(line);
                     }
 
-                    String loadedDataFromLink = sb.toString();
-                    returnedJSONObject = (new JsonParser()).parse(loadedDataFromLink).getAsJsonObject();
+                    returnedJSONObject = (new JsonParser()).parse(sb.toString()).getAsJsonObject();
 
                     br.close();
                 }catch (Exception e){
                     System.out.println(e);
                 }
-
                 return returnedJSONObject;
             }
         };
         new Thread(runnable).start();
     }
 
-    public void startRecyclerView(final ArrayList<ViewElement> list){
+    private void startRecyclerView(final ArrayList<ViewElement> list){
         layoutManager = new LinearLayoutManager(getApplicationContext());
         recyclerView.setLayoutManager(layoutManager);
         adapter = new MyAdapter(list, getApplicationContext());
@@ -239,7 +269,7 @@ public class ContentActivity extends AppCompatActivity implements NavigationView
         updateRecyclerView();
     }
 
-    public void updateRecyclerView(){
+    private void updateRecyclerView(){
         scrollListener = new EndlessRecyclerViewScrollListener(layoutManager) {
             @Override
             public void onLoadMore(int page, int totalItemsCount, RecyclerView view) {
@@ -253,16 +283,37 @@ public class ContentActivity extends AppCompatActivity implements NavigationView
 
         String timeString;
 
-        if (ISOString.contains("H")){
-            ISOString = ISOString.replace("PT","").replace("H",":").replace("M",":").replace("S","");
-            String arr[]=ISOString.split(":");
-            timeString = String.format("%d:%02d:%02d", Integer.parseInt(arr[0]), Integer.parseInt(arr[1]), Integer.parseInt(arr[2]));
-        }else {
-            ISOString = ISOString.replace("PT","").replace("M",":").replace("S","");
-            String arr[]=ISOString.split(":");
-            timeString = String.format("%02d:%02d", Integer.parseInt(arr[0]), Integer.parseInt(arr[1]));
+        System.out.println(ISOString);
+        try{
+            if(ISOString != null){
+
+                ISOString = ISOString.replace("PT", "").replace("H", ":").replace("M", ":").replace("S", "");
+                String arr[] = ISOString.split(":");
+
+                switch (arr.length){
+                    case 1 : {
+                        timeString = String.format("%02d", Integer.parseInt(arr[0]));
+                        return "00:"+timeString;
+                    }
+                    case 2 : {
+                        timeString = String.format("%02d:%02d", Integer.parseInt(arr[0]), Integer.parseInt(arr[1]));
+                        return timeString;
+                    }
+                    case 3 : {
+                        timeString = String.format("%d:%02d:%02d", Integer.parseInt(arr[0]), Integer.parseInt(arr[1]), Integer.parseInt(arr[2]));
+                        return timeString;
+                    }
+                    default:
+                        System.out.println("miss");
+                }
+
+            }
+
+        }catch (Exception e){
+            System.out.println("getDuration error");
         }
-        return timeString;
+
+        return  "-";
     }
 
     public void loadMore(View view){

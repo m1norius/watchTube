@@ -73,4 +73,16 @@ public class ContentDetails {
         this.projection = projection;
     }
 
+
+    @Override
+    public String toString() {
+        return "ContentDetails{" +
+                "duration='" + duration + '\'' +
+                ", dimension='" + dimension + '\'' +
+                ", definition='" + definition + '\'' +
+                ", caption='" + caption + '\'' +
+                ", licensedContent=" + licensedContent +
+                ", projection='" + projection + '\'' +
+                '}';
+    }
 }

@@ -69,4 +69,30 @@ public class ViewElement {
                 ", imageUrl='" + imageUrl + '\'' +
                 '}';
     }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+
+        ViewElement that = (ViewElement) o;
+
+        if (title != null ? !title.equals(that.title) : that.title != null) return false;
+        if (description != null ? !description.equals(that.description) : that.description != null)
+            return false;
+        if (videoUrl != null ? !videoUrl.equals(that.videoUrl) : that.videoUrl != null)
+            return false;
+        return imageUrl != null ? imageUrl.equals(that.imageUrl) : that.imageUrl == null;
+
+    }
+
+    @Override
+    public int hashCode() {
+        int result = title != null ? title.hashCode() : 0;
+        result = 31 * result + (description != null ? description.hashCode() : 0);
+        result = 31 * result + (videoUrl != null ? videoUrl.hashCode() : 0);
+        result = 31 * result + (imageUrl != null ? imageUrl.hashCode() : 0);
+        result = 31 * result + (duration != null ? duration.hashCode() : 0);
+        return result;
+    }
 }
