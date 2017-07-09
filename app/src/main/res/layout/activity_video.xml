@@ -11,4 +11,9 @@
 
     </com.google.android.youtube.player.YouTubePlayerView>
 
+    <VideoView
+        android:id="@+id/id_mediaPlayer"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent" />
+
 </LinearLayout>

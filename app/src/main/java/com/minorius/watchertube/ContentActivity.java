@@ -1,6 +1,7 @@
 package com.minorius.watchertube;
 
 import android.content.Intent;
+import android.database.sqlite.SQLiteDatabase;
 import android.os.Bundle;
 import android.os.Handler;
 import android.support.annotation.NonNull;
@@ -24,34 +25,27 @@ import com.facebook.login.LoginManager;
 import com.google.gson.Gson;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
+import com.minorius.watchertube.dbtube.MyIMG;
+import com.minorius.watchertube.dbtube.SQLTubeHelper;
 import com.minorius.watchertube.gson.duration.Example;
 import com.minorius.watchertube.gson.main.Item;
 import com.minorius.watchertube.gson.main.Main;
 import com.minorius.watchertube.gson.main.Snippet;
 
-import org.codehaus.jackson.map.util.ISO8601DateFormat;
-
 import java.io.BufferedReader;
+import java.io.IOException;
 import java.io.InputStreamReader;
 import java.net.HttpURLConnection;
 import java.net.URL;
-import java.text.DateFormat;
-import java.text.ParseException;
-import java.text.SimpleDateFormat;
 import java.util.ArrayList;
-import java.util.Calendar;
-import java.util.Date;
-import java.util.concurrent.Callable;
-import java.util.concurrent.CopyOnWriteArrayList;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-import java.util.concurrent.Future;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
+import java.util.HashMap;
+import java.util.Map;
 
 public class ContentActivity extends AppCompatActivity implements NavigationView.OnNavigationItemSelectedListener{
 
     private int flag;
+
+    public static boolean onLine = false;
 
     public static final String KEY = "AIzaSyAFUj0tBwzsexsjV81qjF9f1pCGtmDemDE";
 
@@ -69,14 +63,13 @@ public class ContentActivity extends AppCompatActivity implements NavigationView
     private ArrayList<ViewElement> listForView;
     private ImageView imageView;
     private RecyclerView recyclerView;
-    private NavigationView navigationView;
-    private ProfileTracker profileTracker;
     private EndlessRecyclerViewScrollListener scrollListener;
     private ActionBarDrawerToggle actionBarDrawerToggle;
-    private DrawerLayout drawerLayout;
 
     private MyAdapter adapter;
     private LinearLayoutManager layoutManager;
+
+    private static HashMap<String, ViewElement> cachedMapFromDb;
 
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
@@ -87,9 +80,20 @@ public class ContentActivity extends AppCompatActivity implements NavigationView
         setContentView(R.layout.activity_content);
 
         recyclerView = (RecyclerView) findViewById(R.id.id_recycler_view);
-        navigationView = (NavigationView) findViewById(R.id.id_nav_view);
-        drawerLayout = (DrawerLayout) findViewById(R.id.id_drawer_layout);
+        NavigationView navigationView = (NavigationView) findViewById(R.id.id_nav_view);
+        DrawerLayout drawerLayout = (DrawerLayout) findViewById(R.id.id_drawer_layout);
         imageView = (ImageView) findViewById(R.id.id_logo);
+
+        navigationView.setNavigationItemSelectedListener(this);
+        actionBarDrawerToggle = new ActionBarDrawerToggle(this, drawerLayout, R.string.open, R.string.close);
+        drawerLayout.addDrawerListener(actionBarDrawerToggle);
+        actionBarDrawerToggle.syncState();
+
+        if (getSupportActionBar() != null){
+            getSupportActionBar().setDisplayHomeAsUpEnabled(true);
+        }
+
+        listForView = new ArrayList<>();
 
         navigationView.setNavigationItemSelectedListener(this);
         actionBarDrawerToggle = new ActionBarDrawerToggle(this, drawerLayout, R.string.open, R.string.close);
@@ -98,27 +102,51 @@ public class ContentActivity extends AppCompatActivity implements NavigationView
         getSupportActionBar().setDisplayHomeAsUpEnabled(true);
 
         listForView = new ArrayList<>();
-
     }
-
-
 
     @Override
     public boolean onNavigationItemSelected(@NonNull MenuItem item) {
         imageView.setVisibility(View.GONE);
         switch (item.getItemId()){
             case R.id.first_id:
-                setDefaultPropertiesForRecyclerViewByFlag(1);
-                loadJSON(PLAYLIST_1);
+                if (isOnline()){
+                    onLine = true;
+                    cachedMapFromDb = getCachedListFromDb(SQLTubeHelper.TABLE_1);
+                    setDefaultPropertiesForRecyclerViewByFlag(1);
+                    setRecyclerView(PLAYLIST_1, SQLTubeHelper.TABLE_1);
+                }else {
+                    onLine = false;
+                    cachedMapFromDb = getCachedListFromDb(SQLTubeHelper.TABLE_1);
+                    setDefaultPropertiesForRecyclerViewByFlag(1);
+                    startRecyclerView(makeListForRecyclerViewFromCachedListFromDb(cachedMapFromDb));
+                }
+
                 break;
             case R.id.second_id:
-                setDefaultPropertiesForRecyclerViewByFlag(2);
-                loadJSON(PLAYLIST_2);
+                if (isOnline()){
+                    onLine = true;
+                    cachedMapFromDb = getCachedListFromDb(SQLTubeHelper.TABLE_2);
+                    setDefaultPropertiesForRecyclerViewByFlag(2);
+                    setRecyclerView(PLAYLIST_2, SQLTubeHelper.TABLE_2);
+                }else {
+                    onLine = false;
+                    cachedMapFromDb = getCachedListFromDb(SQLTubeHelper.TABLE_2);
+                    setDefaultPropertiesForRecyclerViewByFlag(2);
+                    startRecyclerView(makeListForRecyclerViewFromCachedListFromDb(cachedMapFromDb));
+                }
                 break;
             case R.id.third_id:
-                setDefaultPropertiesForRecyclerViewByFlag(3);
-                loadJSON(PLAYLIST_3);
-
+                if (isOnline()){
+                    onLine = true;
+                    cachedMapFromDb = getCachedListFromDb(SQLTubeHelper.TABLE_3);
+                    setDefaultPropertiesForRecyclerViewByFlag(3);
+                    setRecyclerView(PLAYLIST_3, SQLTubeHelper.TABLE_3);
+                }else {
+                    onLine = false;
+                    cachedMapFromDb = getCachedListFromDb(SQLTubeHelper.TABLE_3);
+                    setDefaultPropertiesForRecyclerViewByFlag(3);
+                    startRecyclerView(makeListForRecyclerViewFromCachedListFromDb(cachedMapFromDb));
+                }
                 break;
             default:
                 Toast.makeText(getApplicationContext(), "Error", Toast.LENGTH_SHORT).show();
@@ -127,6 +155,24 @@ public class ContentActivity extends AppCompatActivity implements NavigationView
         DrawerLayout drawerLayout = (DrawerLayout) findViewById(R.id.id_drawer_layout);
         drawerLayout.closeDrawer(GravityCompat.START);
         return true;
+    }
+
+    private HashMap<String, ViewElement> getCachedListFromDb(String table){
+        if (cachedMapFromDb != null){
+            cachedMapFromDb.clear();
+        }
+        SQLTubeHelper sqlTubeHelper = new SQLTubeHelper(getApplicationContext());
+        SQLiteDatabase db = sqlTubeHelper.getConnection();
+        sqlTubeHelper.getReadableDatabase();
+        return sqlTubeHelper.getAllDataFromDb(db, table);
+    }
+
+    private ArrayList<ViewElement> makeListForRecyclerViewFromCachedListFromDb(HashMap<String, ViewElement> cachedMapFromDb){
+        for (Map.Entry<String, ViewElement> viewElement : cachedMapFromDb.entrySet()){
+            listForView.add(viewElement.getValue());
+        }
+
+        return listForView;
     }
 
     private void setDefaultPropertiesForRecyclerViewByFlag(int flag){
@@ -139,7 +185,7 @@ public class ContentActivity extends AppCompatActivity implements NavigationView
         }
     }
 
-    public void loadJSON(final String link){
+    public void setRecyclerView(final String link, final String table){
         final Handler handler = new Handler();
 
         Runnable runnable = new Runnable() {
@@ -171,10 +217,7 @@ public class ContentActivity extends AppCompatActivity implements NavigationView
                                         @Override
                                         public void run() {
                                             final String duration;
-                                            //System.out.println(linkForDuration);
-                                            //+
                                             jsonObjectForDuration = getJSONFromLink(linkForDuration);
-                                            //+
                                             String ISODuration = parseJSONForDuration(jsonObjectForDuration);
 
                                             duration = getDuration(ISODuration);
@@ -193,11 +236,19 @@ public class ContentActivity extends AppCompatActivity implements NavigationView
                                                         if (!listForView.contains(viewElement)){
                                                             listForView.add(viewElement);
                                                             adapter.notifyDataSetChanged();
+
+                                                            String imageName = MyIMG.getParseNameFromUrl(viewElement.getImageUrl());
+
+                                                            if (!cachedMapFromDb.containsKey(imageName)){
+                                                                SQLTubeHelper sqlTubeHelper = new SQLTubeHelper(getApplicationContext());
+                                                                SQLiteDatabase db = sqlTubeHelper.getConnection();
+                                                                sqlTubeHelper.insertToDb(db, table, viewElement.getTitle(), viewElement.getDescription(), imageName, viewElement.getDuration(), viewElement.getVideoUrl());
+                                                            }
                                                         }
 
 
                                                     }catch (Exception e){
-                                                        System.out.println(e);
+                                                        e.printStackTrace();
                                                     }
 
                                                 }
@@ -206,7 +257,7 @@ public class ContentActivity extends AppCompatActivity implements NavigationView
                                     });
                                     t.start();
                                 } catch (Exception e) {
-                                    System.out.println(e);
+                                    e.printStackTrace();
                                 }
                             }
                             if (fromJson.getPrevPageToken() == null) {
@@ -222,9 +273,7 @@ public class ContentActivity extends AppCompatActivity implements NavigationView
                         Example fromJson = gson.fromJson(jsonObject, Example.class);
 
                         for (com.minorius.watchertube.gson.duration.Item example : fromJson.getItems()) {
-                            //System.out.println(example);
-                            String duration = example.getContentDetails().getDuration();
-                            return duration;
+                            return example.getContentDetails().getDuration();
                         }
 
                         System.out.println("parseJSONForDuration error");
@@ -253,7 +302,7 @@ public class ContentActivity extends AppCompatActivity implements NavigationView
 
                     br.close();
                 }catch (Exception e){
-                    System.out.println(e);
+                    e.printStackTrace();
                 }
                 return returnedJSONObject;
             }
@@ -283,30 +332,32 @@ public class ContentActivity extends AppCompatActivity implements NavigationView
 
         String timeString;
 
-        System.out.println(ISOString);
+        if (ISOString.contains("H") && !ISOString.contains("M")){
+            ISOString = ISOString+"0M"+"0S";
+        }
+        if (ISOString.contains("M") && !ISOString.contains("S")){
+            ISOString = ISOString+"0S";
+        }
+
         try{
-            if(ISOString != null){
+            ISOString = ISOString.replace("PT", "").replace("H", ":").replace("M", ":").replace("S", "");
+            String arr[] = ISOString.split(":");
 
-                ISOString = ISOString.replace("PT", "").replace("H", ":").replace("M", ":").replace("S", "");
-                String arr[] = ISOString.split(":");
-
-                switch (arr.length){
-                    case 1 : {
-                        timeString = String.format("%02d", Integer.parseInt(arr[0]));
-                        return "00:"+timeString;
-                    }
-                    case 2 : {
-                        timeString = String.format("%02d:%02d", Integer.parseInt(arr[0]), Integer.parseInt(arr[1]));
-                        return timeString;
-                    }
-                    case 3 : {
-                        timeString = String.format("%d:%02d:%02d", Integer.parseInt(arr[0]), Integer.parseInt(arr[1]), Integer.parseInt(arr[2]));
-                        return timeString;
-                    }
-                    default:
-                        System.out.println("miss");
+            switch (arr.length) {
+                case 1: {
+                    timeString = String.format("%02d", Integer.parseInt(arr[0]));
+                    return "00:" + timeString;
                 }
-
+                case 2: {
+                    timeString = String.format("%02d:%02d", Integer.parseInt(arr[0]), Integer.parseInt(arr[1]));
+                    return timeString;
+                }
+                case 3: {
+                    timeString = String.format("%d:%02d:%02d", Integer.parseInt(arr[0]), Integer.parseInt(arr[1]), Integer.parseInt(arr[2]));
+                    return timeString;
+                }
+                default:
+                    System.out.println("miss");
             }
 
         }catch (Exception e){
@@ -324,15 +375,15 @@ public class ContentActivity extends AppCompatActivity implements NavigationView
                 switch (flag){
                     case 1:
                         String NEXT_LIST_1 = "https://www.googleapis.com/youtube/v3/playlistItems?part=snippet&playlistId="+LINK_1+"&key="+KEY+"&maxResults="+maxResult+"&pageToken="+nextPageToken;
-                        loadJSON(NEXT_LIST_1);
+                        setRecyclerView(NEXT_LIST_1, SQLTubeHelper.TABLE_1);
                         break;
                     case 2:
                         String NEXT_LIST_2 = "https://www.googleapis.com/youtube/v3/playlistItems?part=snippet&playlistId="+LINK_2+"&key="+KEY+"&maxResults="+maxResult+"&pageToken="+nextPageToken;
-                        loadJSON(NEXT_LIST_2);
+                        setRecyclerView(NEXT_LIST_2, SQLTubeHelper.TABLE_2);
                         break;
                     case 3:
                         String NEXT_LIST_3 = "https://www.googleapis.com/youtube/v3/playlistItems?part=snippet&playlistId="+LINK_3+"&key="+KEY+"&maxResults="+maxResult+"&pageToken="+nextPageToken;
-                        loadJSON(NEXT_LIST_3);
+                        setRecyclerView(NEXT_LIST_3, SQLTubeHelper.TABLE_3);
                         break;
                     default:
                         Toast.makeText(getApplicationContext(), "Error", Toast.LENGTH_SHORT).show();
@@ -368,7 +419,7 @@ public class ContentActivity extends AppCompatActivity implements NavigationView
         if (Profile.getCurrentProfile() != null){
             setTitle(Profile.getCurrentProfile().getName());
         }else {
-            profileTracker = new ProfileTracker() {
+           new ProfileTracker() {
                 @Override
                 protected void onCurrentProfileChanged(Profile oldProfile, Profile currentProfile) {
                     if (currentProfile != null) {
@@ -377,6 +428,19 @@ public class ContentActivity extends AppCompatActivity implements NavigationView
                 }
             };
         }
+    }
+
+    private boolean isOnline() {
+        Runtime runtime = Runtime.getRuntime();
+        try {
+            Process ipProcess = runtime.exec("/system/bin/ping -c 1 8.8.8.8");
+            int     exitValue = ipProcess.waitFor();
+            return (exitValue == 0);
+        }
+        catch (IOException | InterruptedException e){
+            e.printStackTrace();
+        }
+        return false;
     }
 
     private void logOut(){
